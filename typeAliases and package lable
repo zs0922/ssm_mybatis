@@ -1,0 +1,65 @@
+-----------------------SqlMapConfig.xml---------------------------
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+<!--    给类取别名的两种方式 typeAliases或package标签，两个选其中一个即可-->
+    <typeAliases>
+<!--        通过typeAlias标签：type属性写的是全限定类名，alias即别名-->
+        <typeAlias type="org.example.entity.User" alias="user"></typeAlias>
+<!--        通过package标签，用于指定要配置包的别名，指定后，该包下的所有实体类都会注册起别名，类名即别名-->
+        <package name="org.example.entity"/>
+    </typeAliases>
+    <environments default="mysql">
+        <environment id="mysql">
+            <transactionManager type="JDBC"></transactionManager>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/mydb"/>
+                <property name="username" value="root"/>
+                <property name="password" value="zs0922"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <mapper resource="org/example/dao/IUserDao.xml"/>
+    </mappers>
+</configuration>
+-----------------------IUserDao.xml---------------------------
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.dao.IUserDao">
+<!--    通过SqlMapConfig.xml的typeAliases标签取了别名-->
+    <select id="findAll" resultType="user">
+        select * from user
+    </select>
+</mapper>
+
+
+
+###在SqlMapConfig.xml中的package标签用于指定dao接口所在的包，指定后不需要再写mapper及resource或class
+-----------------------SqlMapConfig.xml---------------------------
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <typeAliases>
+<!--        通过package标签，用于指定要配置包的别名，指定后，该包下的所有实体类都会注册起别名，类名即别名-->
+        <package name="org.example.entity"/>
+    </typeAliases>
+    <environments default="mysql">
+        <environment id="mysql">
+            <transactionManager type="JDBC"></transactionManager>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/mydb"/>
+                <property name="username" value="root"/>
+                <property name="password" value="zs0922"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <package name="org/example/dao"/>
+    </mappers>
+</configuration>
