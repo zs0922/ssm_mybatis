@@ -103,8 +103,13 @@ public class User implements Serializable {
 ---------------------------QueryVo.java-------------------------------
 package org.example.entity;
 
+import java.util.List;
+
 public class QueryVo {
+//    ONGL表达式查询需要用到的User对象
     private User user;
+//    条件查询中提供id集合
+    private List<Integer> ids;
 
     public User getUser() {
         return user;
@@ -113,7 +118,16 @@ public class QueryVo {
     public void setUser(User user) {
         this.user = user;
     }
+
+    public List<Integer> getIds() {
+        return ids;
+    }
+
+    public void setIds(List<Integer> ids) {
+        this.ids = ids;
+    }
 }
+
 ---------------------------IUserDao.java--------------------------
 package org.example.dao;
 
@@ -139,8 +153,12 @@ public interface IUserDao {
     int totalCount();
 //    模糊查询（常规，通过模糊名字查询）
     List<User> findByName(String s);
-//      模糊查询（ONGL表达式，传递pojo对象，根据QueryVo的条件查询用户）
+//    模糊查询（ONGL表达式，传递pojo对象，根据QueryVo的条件查询用户）
     List<User> findByQueryVo(QueryVo vo);
+//    条件查询
+    List<User> findByCondition(User user);
+//    根据QueryVo中提供的id集合，查询用户信息
+    List<User> findByQueryVoIds(QueryVo vo);
 }
 ---------------------------IUserDao.xml-------------------------------
 <?xml version="1.0" encoding="UTF-8"?>
@@ -193,6 +211,29 @@ public interface IUserDao {
     <select id="findByQueryVo" resultType="user" parameterType="QueryVo">
         select * from user where username like #{user.username}
     </select>
+<!--    条件查询-->
+    <select id="findByCondition" resultType="user" parameterType="user">
+        select * from user
+        <where>
+            <if test="username!=null">
+                and username=#{username}
+            </if>
+            <if test="password!=null">
+                and password=#{password}
+            </if>
+        </where>
+    </select>
+<!--    根据QueryVo中提供的id集合，查询用户信息-->
+    <select id="findByQueryVoIds" parameterType="QueryVo" resultType="user">
+        select * from user
+        <where>
+            <if test="ids!=null and ids.size()>0">
+                <foreach collection="ids" open="and id in (" close=")" item="uid" separator=",">
+                    #{uid}
+                </foreach>
+            </if>
+        </where>
+    </select>
 </mapper>
 ---------------------------testCURD.java-------------------------------
 package org.example.test;
@@ -210,6 +251,7 @@ import org.junit.Test;
 
 import javax.management.Query;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 public class testCRUD {
@@ -303,6 +345,30 @@ public class testCRUD {
         List<User> users=userDao.findByQueryVo(vo);
         for(User u:users){
             System.out.println(u);
+        }
+    }
+//    测试findByCondition方法
+    @Test
+    public void testFindByCondition(){
+        User user=new User();
+        user.setUsername("chl");
+        user.setPassword("cccc");
+        List<User> users=userDao.findByCondition(user);
+        for (User u:users){
+            System.out.println(u);
+        }
+    }
+//    测试findByQueryVo方法
+    @Test
+    public void testFindByQueryVoIds(){
+        QueryVo vo=new QueryVo();
+        List<Integer> ids=new ArrayList<Integer>();
+        ids.add(1);
+        ids.add(2);
+        vo.setIds(ids);
+        List<User> users=userDao.findByQueryVoIds(vo);
+        for(User user:users){
+            System.out.println(user);
         }
     }
 }
