@@ -1,0 +1,368 @@
+------------------------------pom.xml---------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>twotable</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.35</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.4</version>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.12</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
+------------------------------Info.java---------------------------------
+package org.example.entity;
+
+import java.io.Serializable;
+
+public class Info implements Serializable {
+    private int id;
+    private int uid;
+    private float money;
+
+//    从表实体应包含一个主表实体的对象引用
+    private User user;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(int uid) {
+        this.uid = uid;
+    }
+
+    public float getMoney() {
+        return money;
+    }
+
+    public void setMoney(float money) {
+        this.money = money;
+    }
+//Info类的toString方法，testFindAllInfo方法用到
+//    @Override
+//    public String toString() {
+//        return "Info{" +
+//                "id=" + id +
+//                ", uid=" + uid +
+//                ", money=" + money +
+//                '}';
+//    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    @Override
+    public String toString() {
+        return "Info{" +
+                "id=" + id +
+                ", uid=" + uid +
+                ", money=" + money +
+                ", user=" + user +
+                '}';
+    }
+}
+------------------------------User.java---------------------------------
+package org.example.entity;
+
+import java.io.Serializable;
+
+public class User implements Serializable {
+    private int id;
+    private String username;
+    private String password;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
+}
+------------------------------UserInfo.java---------------------------------
+package org.example.entity;
+//  双表查询之UserInfo类的查询,UserInfo类继承Info类
+public class UserInfo extends Info {
+    private String username;
+    private String password;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + "     UserInfo{" +
+                "username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
+}
+------------------------------jdbcConfig.properties---------------------------------
+jdbc.driver=com.mysql.jdbc.Driver
+jdbc.url=jdbc:mysql://localhost:3306/mydb
+jdbc.username=root
+jdbc.password=zs0922
+------------------------------SqlMapConfig.xml---------------------------------
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <properties resource="jdbcConfig.properties"></properties>
+    <typeAliases>
+        <package name="org.example.entity"/>
+    </typeAliases>
+    <environments default="mysql">
+        <environment id="mysql">
+            <transactionManager type="JDBC"></transactionManager>
+            <dataSource type="POOLED">
+                <property name="driver" value="${jdbc.driver}"/>
+                <property name="url" value="${jdbc.url}"/>
+                <property name="username" value="${jdbc.username}"/>
+                <property name="password" value="${jdbc.password}"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <package name="org/example/dao"/>
+    </mappers>
+</configuration>
+------------------------------IUserDao.java---------------------------------
+package org.example.dao;
+
+import org.example.entity.User;
+
+import java.util.List;
+
+public interface IUserDao {
+    List<User> findAllUser();
+}
+------------------------------IInfoDao.java---------------------------------
+package org.example.dao;
+
+import org.example.entity.Info;
+
+import java.util.List;
+
+public interface IInfoDao {
+    List<Info> findAllInfo();
+}
+------------------------------IUserInfoDao.java---------------------------------
+package org.example.dao;
+
+import org.example.entity.Info;
+import org.example.entity.UserInfo;
+
+import java.util.List;
+
+public interface IUserInfoDao {
+//    双表查询之UserInfo类的查询
+    List<UserInfo> findAll();
+//    双表查询之Info类的查询
+    List<Info> findAllUserInfo();
+}
+------------------------------IUserDao.xml---------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.dao.IInfoDao">
+    <resultMap id="info" type="info">
+        <id property="id" column="id"></id>
+        <result property="uid" column="uid"></result>
+        <result property="money" column="money"></result>
+    </resultMap>
+    <select id="findAllInfo" resultMap="info">
+        select * from info;
+    </select>
+</mapper>
+------------------------------IInfoDao.xml---------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.dao.IUserDao">
+    <resultMap id="user" type="user">
+        <id property="id" column="id"></id>
+        <result property="username" column="username"></result>
+        <result property="password" column="password"></result>
+    </resultMap>
+    <select id="findAllUser" resultMap="user">
+        select * from user;
+    </select>
+</mapper>
+------------------------------IUserInfoDao.xml---------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.dao.IUserInfoDao">
+<!--    双表查询之UserInfo类的查询-->
+    <select id="findAll" resultType="UserInfo">
+        select user.username,user.password,info.* from user,info where user.id=info.uid
+    </select>
+<!--    双表查询之Info类的查询-->
+    <!--定义封装Info和User的resultMap-->
+    <resultMap id="userinfoMap" type="org.example.entity.Info">
+        <id property="id" column="id"></id>
+        <result property="uid" column="uid"></result>
+        <result property="money" column="money"></result>
+        <!-- 一对一的关系映射，配置封装user的内容 -->
+        <association property="user" column="uid" javaType="org.example.entity.User">
+            <id property="id" column="id"></id>
+            <result property="username" column="username"></result>
+            <result property="password" column="password"></result>
+        </association>
+    </resultMap>
+    <select id="findAllUserInfo" resultMap="userinfoMap">
+        SELECT info.id as iid,info.uid,info.money,user.* FROM USER,info WHERE user.id=info.uid;
+    </select>
+</mapper>
+------------------------------testTwoTable.java---------------------------------
+package org.example.test;
+
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.example.dao.IInfoDao;
+import org.example.dao.IUserDao;
+import org.example.dao.IUserInfoDao;
+import org.example.entity.Info;
+import org.example.entity.User;
+import org.example.entity.UserInfo;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+public class TestTwoTable {
+    private InputStream in;
+    private SqlSession sqlSession;
+    private IUserDao userDao;
+    private IInfoDao infoDao;
+    private IUserInfoDao userinfoDao;
+    @Before
+    public void init() throws IOException {
+        in= Resources.getResourceAsStream("SqlMapConfig.xml");
+        SqlSessionFactory factory= new SqlSessionFactoryBuilder().build(in);
+        sqlSession=factory.openSession();
+    }
+    @After
+    public void destroy() throws IOException {
+        sqlSession.commit();
+        sqlSession.close();
+        in.close();
+    }
+    @Test
+    public void testFindAllUser(){
+        userDao=sqlSession.getMapper(IUserDao.class);
+        List<User> users=userDao.findAllUser();
+        for (User user:users){
+            System.out.println(user);
+        }
+    }
+    @Test
+    public void testFindAllInfo(){
+        infoDao=sqlSession.getMapper(IInfoDao.class);
+        List<Info> infos=infoDao.findAllInfo();
+        for (Info info:infos){
+            System.out.println(info);
+        }
+    }
+//    双表查询之UserInfo类的查询
+    @Test
+    public void testFindAll(){
+        userinfoDao=sqlSession.getMapper(IUserInfoDao.class);
+        List<UserInfo> userinfos=userinfoDao.findAll();
+        for(UserInfo ui:userinfos){
+            System.out.println(ui);
+        }
+    }
+//    双表查询之Info类的查询
+    @Test
+    public void testFindAllUserInfo(){
+        userinfoDao=sqlSession.getMapper(IUserInfoDao.class);
+        List<Info> infos=userinfoDao.findAllUserInfo();
+        for(Info info:infos){
+            System.out.println(info);
+        }
+    }
+}
