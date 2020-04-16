@@ -1,0 +1,308 @@
+---------------------------pom.xml--------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>CRUD</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <dependencies>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.35</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.4</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.12</version>
+        </dependency>
+    </dependencies>
+</project>
+---------------------------SqlMapConfig.xml--------------------------
+<?xml version='1.0' encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <typeAliases>
+        <package name="org.example.entity"/>
+    </typeAliases>
+    <environments default="mysql">
+        <environment id="mysql">
+            <transactionManager type="JDBC"></transactionManager>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/mydb"/>
+                <property name="username" value="root"/>
+                <property name="password" value="zs0922"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <package name="org/example/dao"/>
+    </mappers>
+</configuration>
+---------------------------User.java--------------------------
+package org.example.entity;
+
+import java.io.Serializable;
+
+public class User implements Serializable {
+    private int id;
+    private String username;
+    private String password;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
+}
+---------------------------QueryVo.java-------------------------------
+package org.example.entity;
+
+public class QueryVo {
+    private User user;
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+}
+---------------------------IUserDao.java--------------------------
+package org.example.dao;
+
+import org.example.entity.QueryVo;
+import org.example.entity.User;
+
+import java.util.List;
+
+public interface IUserDao {
+//    对数据库的增加操作
+    void insertUser(User user);
+//    对数据库的查询所有操作
+    List<User> findAll();
+//    对数据库的查询操作(根据id查询)
+    User findOneById(int id);
+//    对数据库的更新操作(根据id查询)
+    void updateUser(User user);
+//    对数据库的删除操作(根据id查询)
+    void deleteUser(int i);
+//    测试对数据库操作是否保存成功
+    void saveUser(User user);
+//    看数据库一共有多少条记录
+    int totalCount();
+//    模糊查询（常规，通过模糊名字查询）
+    List<User> findByName(String s);
+//      模糊查询（ONGL表达式，传递pojo对象，根据QueryVo的条件查询用户）
+    List<User> findByQueryVo(QueryVo vo);
+}
+---------------------------IUserDao.xml-------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.dao.IUserDao">
+<!--    用作结果集-->
+    <resultMap id="alluser" type="user">
+        <id property="id" column="id"></id>
+        <result property="username" column="username"></result>
+        <result property="password" column="password"></result>
+    </resultMap>
+<!--    对数据库的增加操作-->
+    <insert id="insertUser" parameterType="user">
+        insert into user(username,password) values(#{username},#{password})
+    </insert>
+<!--    对数据库的查询操作-->
+    <select id="findAll" resultMap="alluser">
+        select * from user;
+    </select>
+<!--    对数据库的查询操作(根据id查询)-->
+    <select id="findOneById" parameterType="integer" resultMap="alluser">
+        select * from user where id=#{id}
+    </select>
+<!--    对数据库的更新操作(根据id查询)-->
+    <update id="updateUser" parameterType="user">
+        update user set username=#{username},password=#{password} where id=#{id}
+    </update>
+<!--    对数据库的删除操作(根据id查询)-->
+    <delete id="deleteUser" parameterType="Integer">
+        delete from user where id=#{id}
+    </delete>
+<!--    看是否保存成功-->
+    <insert id="saveUser" parameterType="user">
+        <selectKey keyProperty="id" keyColumn="id" resultType="int" order="AFTER">
+            select last_insert_id();
+        </selectKey>
+        insert into user(username,password) values (#{username},#{password})
+    </insert>
+<!--    看数据库有多少条记录-->
+    <select id="totalCount" resultType="integer">
+        select count(id) from user
+    </select>
+<!--    模糊查询（常规，通过模糊名字查询）-->
+    <select id="findByName" resultType="user" parameterType="String">
+        select * from user where username like "%${namevalue}%"
+    </select>
+<!--    模糊查询（ONGL表达式，传递pojo对象，根据QueryVo的条件查询用户）-->
+    <select id="findByQueryVo" resultType="user" parameterType="QueryVo">
+        select * from user where username like #{user.username}
+    </select>
+</mapper>
+---------------------------testCURD.java-------------------------------
+package org.example.test;
+
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.example.dao.IUserDao;
+import org.example.entity.QueryVo;
+import org.example.entity.User;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import javax.management.Query;
+import java.io.InputStream;
+import java.util.List;
+
+public class testCRUD {
+    private InputStream in;
+    private SqlSession sqlSession;
+    private IUserDao userDao;
+    @Before
+    public void init() throws Exception {
+        in= Resources.getResourceAsStream("SqlMapConfig.xml");
+        SqlSessionFactory factory= new SqlSessionFactoryBuilder().build(in);
+        sqlSession=factory.openSession();
+        userDao=sqlSession.getMapper(IUserDao.class);
+    }
+    @After
+    public void destroy() throws Exception{
+        sqlSession.commit();
+        sqlSession.close();
+        in.close();
+    }
+//    测试insertUser方法
+    @Test
+    public void testInsertUser(){
+        User user=new User();
+        user.setUsername("insertOne");
+        user.setPassword("insert");
+        userDao.insertUser(user);
+        System.out.println("插入一个元素成功！");
+    }
+//    测试findAll方法
+    @Test
+    public void testFindAllUser(){
+        List<User> users=userDao.findAll();
+        for (User user:users){
+            System.out.println(user);
+        }
+    }
+//    测试findOneById方法
+    @Test
+    public void testFindOneById(){
+        User user=userDao.findOneById(2);
+        System.out.println(user);
+    }
+//    测试updateUser方法
+    @Test
+    public void testUpdateUser(){
+        User user=new User();
+        user.setId(5);
+        user.setUsername("updateOne");
+        user.setPassword("update");
+        userDao.updateUser(user);
+        System.out.println("更新一个元素成功");
+    }
+//    测试deleteUser方法
+    @Test
+    public void testDeleteUser(){
+        User user=new User();
+        userDao.deleteUser(6);
+        System.out.println("删除一个元素成功");
+    }
+//    测试saveUser方法
+    @Test
+    public void testSaveUser(){
+        User user=new User();
+        user.setUsername("last_ins");
+        user.setPassword("insert");
+        System.out.println("保存操作之前"+user);
+        userDao.saveUser(user);
+        System.out.println("保存操作之后"+user);
+    }
+//    测试totalCount方法
+    @Test
+    public void testTotalCount(){
+        int i=userDao.totalCount();
+        System.out.println("当前数据库一共有 "+i+" 条记录");
+    }
+//    测试常规模糊查询
+    @Test
+    public void testFindByName(){
+        List<User> users=userDao.findByName("l");
+        for(User user:users){
+            System.out.println(user);
+        }
+    }
+//    测试ONGL表达式查询
+    @Test
+    public void testFindByQueryVo(){
+        QueryVo vo=new QueryVo();
+        User user=new User();
+        user.setUsername("%l%");
+        vo.setUser(user);
+        List<User> users=userDao.findByQueryVo(vo);
+        for(User u:users){
+            System.out.println(u);
+        }
+    }
+}
