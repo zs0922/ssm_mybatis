@@ -1,2 +1,2 @@
 # ssm_mybatis
-4.8,I learned the mybatis of SSM framework.
+This repository includes some dependencies like mybatis,mysql,log4j and  
